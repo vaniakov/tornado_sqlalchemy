@@ -33,6 +33,7 @@ class TestClients(AsyncHTTPTestCase):
 
     def tearDown(self):
         self.db.rollback()
+        super().tearDown()
 
     def get_app(self):
         return self.app
@@ -41,7 +42,7 @@ class TestClients(AsyncHTTPTestCase):
         models.Client.create(self.db, self.client_data1, commit=False)
         models.Client.create(self.db, self.client_data2, commit=False)
         response = self.fetch('/clients/')
-        parsed_body = json.loads(response.body)
+        parsed_body = json.loads(response.body.decode())
         self.assertEqual(response.code, 200)
         self.assertEqual(len(parsed_body), 2)
         self.assertEqual(parsed_body[0]['id'], 1)
@@ -49,11 +50,10 @@ class TestClients(AsyncHTTPTestCase):
                          self.client_data1['first_name'])
         self.assertEqual(parsed_body[0]['last_name'],
                          self.client_data1['last_name'])
-
     def test_clients_detail(self):
         models.Client.create(self.db, self.client_data1, commit=False)
         response = self.fetch('/clients/1')
-        parsed_body = json.loads(response.body)
+        parsed_body = json.loads(response.body.decode())
         self.assertEqual(response.code, 200)
         self.assertEqual(parsed_body['id'], 1)
         self.assertEqual(parsed_body['first_name'],
@@ -64,7 +64,7 @@ class TestClients(AsyncHTTPTestCase):
     def test_clients_create(self):
         response = self.fetch('/clients/', body=json.dumps(self.client_data1),
                               method='POST')
-        parsed_body = json.loads(response.body)
+        parsed_body = json.loads(response.body.decode())
         self.assertEqual(response.code, 201)
         self.assertEqual(parsed_body['id'], 1)
         self.assertEqual(parsed_body['first_name'],
@@ -77,7 +77,7 @@ class TestClients(AsyncHTTPTestCase):
         models.Client.create(self.db, self.client_data1, commit=False)
         response = self.fetch('/clients/1', body=json.dumps({'last_name': 'changed'}),
                               method='PATCH')
-        parsed_body = json.loads(response.body)
+        parsed_body = json.loads(response.body.decode())
         client = models.Client.get_by_id(self.db, parsed_body['id'], to_dict=False)
 
         self.assertEqual(response.code, 200)
@@ -123,6 +123,7 @@ class TestRooms(AsyncHTTPTestCase):
         self.db.delete(self.client1)
         self.db.delete(self.client2)
         self.db.commit()
+        super().tearDown()
 
     def get_app(self):
         return self.app
@@ -131,7 +132,7 @@ class TestRooms(AsyncHTTPTestCase):
         models.Room.create(self.db, self.room_data1, commit=False)
         models.Room.create(self.db, self.room_data2, commit=False)
         response = self.fetch('/rooms/')
-        parsed_body = json.loads(response.body)
+        parsed_body = json.loads(response.body.decode())
         self.assertEqual(response.code, 200)
         self.assertEqual(len(parsed_body), 2)
         self.assertEqual(parsed_body[0]['number'],
@@ -140,7 +141,7 @@ class TestRooms(AsyncHTTPTestCase):
     def test_clients_detail(self):
         models.Room.create(self.db, self.room_data1, commit=False)
         response = self.fetch('/rooms/1')
-        parsed_body = json.loads(response.body)
+        parsed_body = json.loads(response.body.decode())
         self.assertEqual(response.code, 200)
         self.assertEqual(parsed_body['id'], 1)
         self.assertEqual(parsed_body['number'],
@@ -149,7 +150,7 @@ class TestRooms(AsyncHTTPTestCase):
     def test_room_create(self):
         response = self.fetch('/rooms/', body=json.dumps(self.room_data1),
                               method='POST')
-        parsed_body = json.loads(response.body)
+        parsed_body = json.loads(response.body.decode())
         self.assertEqual(response.code, 201)
         self.assertEqual(parsed_body['id'], 1)
         self.assertEqual(parsed_body['number'],
@@ -162,7 +163,7 @@ class TestRooms(AsyncHTTPTestCase):
         models.Room.create(self.db, self.room_data1, commit=False)
         response = self.fetch('/rooms/1', body=json.dumps({'places': 33}),
                               method='PATCH')
-        parsed_body = json.loads(response.body)
+        parsed_body = json.loads(response.body.decode())
         client = models.Room.get_by_id(self.db, parsed_body['id'], to_dict=False)
 
         self.assertEqual(response.code, 200)
@@ -190,7 +191,7 @@ class TestRooms(AsyncHTTPTestCase):
                               ]}
                               ),
                               method='PATCH')
-        parsed_body = json.loads(response.body)
+        parsed_body = json.loads(response.body.decode())
         room = models.Room.get_by_id(self.db, parsed_body['id'], to_dict=False)
 
         self.assertEqual(response.code, 200)
@@ -209,7 +210,7 @@ class TestRooms(AsyncHTTPTestCase):
                               ]}
                               ),
                               method='PATCH')
-        parsed_body = json.loads(response.body)
+        parsed_body = json.loads(response.body.decode())
         room = models.Room.get_by_id(self.db, created_room['id'], to_dict=False)
 
         self.assertEqual(response.code, 400)
@@ -221,7 +222,7 @@ class TestRooms(AsyncHTTPTestCase):
         created_room = models.Room.create(self.db, self.room_data1, commit=True)
         response = self.fetch('/rooms/',
                               body=json.dumps(self.room_data1), method='POST')
-        parsed_body = json.loads(response.body)
+        parsed_body = json.loads(response.body.decode())
         room = models.Room.get_by_id(self.db, created_room['id'], to_dict=False)
         self.assertEqual(response.code, 400)
         self.assertTrue('error' in parsed_body)

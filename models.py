@@ -117,7 +117,27 @@ class Room(Base, ModelMixin):
     price_day = Column(Float(precision=2))
     clients = relationship('Client', secondary=clients,
                            backref=backref('room', lazy='dynamic'))
-    
+
+    @classmethod
+    def create(cls, session, data_dict, commit=True, close=False, to_dict=True):
+        room = session.query(Room).filter(Room.number==data_dict['number']).first()
+        if room:
+            raise FieldError('Room with number %s already exists!' % room.number)
+        try:
+            inst = cls(**data_dict)
+            session.add(inst)
+            if commit:
+                session.commit()
+        except (TypeError, IntegrityError) as err:
+            raise FieldError(err.args[0])
+        if close:
+            session.close()
+        result = inst
+        if to_dict:
+            result = inst.to_dict()
+        return result
+
+
     def to_dict(self):
         return {
             'id': self.id,
