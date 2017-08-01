@@ -201,9 +201,9 @@ class TestRooms(AsyncHTTPTestCase):
         self.db.commit()
 
     def test_rooms_update_add_too_much_clients(self):
-        self.room_data1['places'] = 1
-        created_room = models.Room.create(self.db, self.room_data1, commit=True)
-        response = self.fetch('/rooms/1',
+        self.room_data2['places'] = 1
+        created_room = models.Room.create(self.db, self.room_data2, commit=True, to_dict=False)
+        response = self.fetch('/rooms/%s' % created_room.id,
                               body=json.dumps({'clients': [
                                   {'id': self.client1.id},
                                   {'id': self.client2.id}
@@ -211,7 +211,7 @@ class TestRooms(AsyncHTTPTestCase):
                               ),
                               method='PATCH')
         parsed_body = json.loads(response.body.decode())
-        room = models.Room.get_by_id(self.db, created_room['id'], to_dict=False)
+        room = models.Room.get_by_id(self.db, created_room.id, to_dict=False)
 
         self.assertEqual(response.code, 400)
         self.assertTrue('error' in parsed_body)
